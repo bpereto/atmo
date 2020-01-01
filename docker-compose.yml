@@ -1,0 +1,56 @@
+version: "3.5"
+services:
+
+  influxdb:
+    image: influxdb:latest
+  #  ports:
+  #    - "8083:8083"
+  #    - "8086:8086"
+    env_file:
+      - .secret
+    environment:
+      - INFLUXDB_DB=iot
+    volumes:
+      - influx-data:/var/lib/influxdb
+  
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - .secret
+    user: "0"
+    links:
+      - influxdb
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  mqtt:
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+    volumes:
+      - ./mqtt/config:/mosquitto/config
+      - ./mqtt/data:/mosquitto/data
+      - ./mqtt/log:/mosquitto/log
+
+  atmo-bridge:
+    image: atmo-bridge:latest
+    env_file:
+      - .secret
+    environment:
+      - BRIDGE_INFLUXDB_ADDRESS=influxdb
+      - BRIDGE_INFLUXDB_DATABASE=iot
+      - BRIDGE_INFLUXDB_USER=admin
+      - BRIDGE_MQTT_USER=iot
+      - BRIDGE_MQTT_ADDRESS=mqtt
+    restart: unless-stopped
+    links:
+      - influxdb
+      - mqtt
+
+volumes:
+  influx-data:
+  grafana-data:
