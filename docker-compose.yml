@@ -3,13 +3,14 @@ services:
 
   influxdb:
     image: influxdb:latest
-  #  ports:
+    ports:
   #    - "8083:8083"
-  #    - "8086:8086"
+      - "8086:8086"
     env_file:
       - .secret
     environment:
-      - INFLUXDB_DB=iot
+      - INFLUXDB_DB=atmo
+      - INFLUXDB_USER=atmo
     volumes:
       - influx-data:/var/lib/influxdb
   
@@ -32,19 +33,19 @@ services:
       - "1883:1883"
       - "8883:8883"
     volumes:
-      - ./mqtt/config:/mosquitto/config
-      - ./mqtt/data:/mosquitto/data
-      - ./mqtt/log:/mosquitto/log
+      - ./mqtt:/mosquitto/config
+      - mqtt-log:/mosquitto/log
+      - mqtt-data:/mosquitto/data
 
   atmo-bridge:
-    image: atmo-bridge:latest
+    build: ./bridge
     env_file:
       - .secret
     environment:
       - BRIDGE_INFLUXDB_ADDRESS=influxdb
-      - BRIDGE_INFLUXDB_DATABASE=iot
-      - BRIDGE_INFLUXDB_USER=admin
-      - BRIDGE_MQTT_USER=iot
+      - BRIDGE_INFLUXDB_DATABASE=atmo
+      - BRIDGE_INFLUXDB_USER=atmo
+      - BRIDGE_MQTT_USER=atmo
       - BRIDGE_MQTT_ADDRESS=mqtt
     restart: unless-stopped
     links:
@@ -54,3 +55,5 @@ services:
 volumes:
   influx-data:
   grafana-data:
+  mqtt-data:
+  mqtt-log:

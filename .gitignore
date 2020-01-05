@@ -34,3 +34,4 @@
 
 *.bak
 .secret
+config.ino
